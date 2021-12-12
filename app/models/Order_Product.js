@@ -18,12 +18,12 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
   Order_Product.associate = (models) => {
-    Order_Product.belongsTo(models.Order, {
+    Order_Product.belongsTo(models.orders, {
       foreignKey: "orderId",
     });
   };
   Order_Product.associate = (models) => {
-    Order_Product.belongsTo(models.Product, {
+    Order_Product.belongsTo(models.products, {
       foreignKey: "productId",
     });
   };

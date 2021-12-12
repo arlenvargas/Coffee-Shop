@@ -2,10 +2,11 @@ const db = require("../models");
 const Product = db.products;
 
 exports.create = async (req, res) => {
+  const transaction = await db.sequelize.transaction();
   try {
-    if (!req.body.name || !req.body.price) {
+    if (!req?.body?.name || !req?.body?.price || !req?.body?.image) {
       res.status(400).send({
-        message: "El nombre y precio son requeridos",
+        message: "El nombre, precio e imagen son requeridos",
       });
     }
     const product = {
@@ -13,12 +14,13 @@ exports.create = async (req, res) => {
       price: req.body.price,
       image: req.body.image,
     };
-    const response = await Product.create(product);
-    res.send(response);
+    const response = await Product.create(product, { transaction });
+    await transaction.commit();
+    res.status(200).send(response);
   } catch (error) {
+    await transaction.rollback();
     res.status(500).send({
-      message:
-        error.message || "Some error occurred while creating the product.",
+      message: error.message || "No se pudo crear el producto",
     });
   }
 };
@@ -29,8 +31,7 @@ exports.findAll = async (req, res) => {
     res.send(response);
   } catch (error) {
     res.status(500).send({
-      message:
-        error.message || "Some error occurred while creating the product.",
+      message: error.message || "No se pudieron recuperar los productos",
     });
   }
 };
@@ -41,13 +42,15 @@ exports.findOne = async (req, res) => {
     const productSearched = await Product.findByPk(id);
     if (!productSearched) {
       res.status(404).send({
-        message: `Cannot find Tutorial with id=${id}.`,
+        message: `No se pudo encontrar el producto con el id=${id}.`,
       });
     }
     res.send(productSearched);
   } catch (error) {
     res.status(500).send({
-      message: error.message || `Error retrieving Tutorial with id=${id}`,
+      message:
+        error.message ||
+        `Ha ocurrido un error al intentar recuperar el producto`,
     });
   }
 };
@@ -55,13 +58,16 @@ exports.findOne = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const { id } = req.params;
-    const response = await Product.update(req.body, {
+    await Product.update(req.body, {
       where: { id: id },
     });
-    res.send(response);
+    res.status(200).send({
+      status: 200,
+    });
   } catch (error) {
     res.status(500).send({
-      message: error.message || `Error updatingWutorial with id=${id}`,
+      message:
+        error.message || `Error actualizando el producto con el id=${id}`,
     });
   }
 };
@@ -69,15 +75,17 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     const { id } = req.params;
-    await Product.destroy({
+    const response = await Product.destroy({
       where: { id: id },
     });
-    res.send({
-      message: "Tutorial was deleted successfully!",
+    res.status(200).send({
+      message: "Producto eliminado correctamente",
+      id,
     });
   } catch (error) {
     res.status(500).send({
-      message: error.message || `Could not delete Tutorial with id=${id}`,
+      message:
+        error.message || `No se pudo eliminar el producto con el id=${id}`,
     });
   }
 };

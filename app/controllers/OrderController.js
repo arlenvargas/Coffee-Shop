@@ -19,9 +19,8 @@ exports.create = async (req, res) => {
     });
     res.status(200).send(response);
   } catch (error) {
-    console.log(error);
     res.status(500).send({
-      message: error.message || "Some error occurred while creating the orders",
+      message: error.message || "Ocurrió un error al crear la orden",
     });
   }
 };
@@ -29,16 +28,20 @@ exports.create = async (req, res) => {
 exports.updateStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const response = await Order.update(
+    await Order.update(
       { state: req?.body?.state },
       {
         where: { id: id },
       }
     );
-    res.status(200).send(response);
+    res.status(200).send({
+      id,
+      state: req?.body?.state,
+    });
   } catch (error) {
     res.status(500).send({
-      message: error || "Some error occurred while creating the orders",
+      message:
+        error || "Ha ocurrido un error al actualizar el estado del producto",
     });
   }
 };
@@ -51,14 +54,15 @@ exports.findAll = async (req, res) => {
           model: products,
           as: "products",
           attributes: ["id", "name", "price"],
-          through: { attributes: ["quantity"] },
+          through: { attributes: ["quantity"], as: "productQuantity" },
         },
       ],
     });
     res.send({ items: response });
   } catch (error) {
     res.status(500).send({
-      message: error.message || "Some error occurred while getting the orders.",
+      message:
+        error.message || "Ha ocurrido un error en la petición de las ordenes",
     });
   }
 };
